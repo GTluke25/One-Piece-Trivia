@@ -1,0 +1,333 @@
+{
+ "_help": "Each prompt pulls its answers from wiki categories and/or an infobox type. Anime-only versions of each category (Non-Canon ...) are included automatically unless include_anime_only is false. Category names must match the wiki exactly (they're plural, like 'Swordsmen'). After editing, run update.bat. Other options: affiliations, devil_fruit_type, starts_with (+ epithets), event/arc/chapters (+ groups). See README.",
+ "prompts": [
+  {
+   "prompt": "Name a Devil Fruit",
+   "infobox": "Devil Fruit Box"
+  },
+  {
+   "prompt": "Name a Fish-Man",
+   "categories": [
+    "Fish-Men"
+   ]
+  },
+  {
+   "prompt": "Name a swordsman",
+   "categories": [
+    "Swordsmen"
+   ]
+  },
+  {
+   "prompt": "Name a giant",
+   "categories": [
+    "Giants"
+   ]
+  },
+  {
+   "prompt": "Name a Marine Vice Admiral",
+   "categories": [
+    "Marine Vice Admirals"
+   ]
+  },
+  {
+   "prompt": "Name an island",
+   "infobox": "Island Box"
+  },
+  {
+   "prompt": "Name a cook",
+   "categories": [
+    "Cooks"
+   ]
+  },
+  {
+   "prompt": "Name a doctor",
+   "categories": [
+    "Doctors"
+   ]
+  },
+  {
+   "prompt": "Name a shipwright",
+   "categories": [
+    "Shipwrights"
+   ]
+  },
+  {
+   "prompt": "Name a sniper",
+   "categories": [
+    "Snipers"
+   ]
+  },
+  {
+   "prompt": "Name a musician",
+   "categories": [
+    "Musicians"
+   ]
+  },
+  {
+   "prompt": "Name a Paramecia Devil Fruit",
+   "categories": [
+    "Paramecia"
+   ]
+  },
+  {
+   "prompt": "Name a Zoan Devil Fruit",
+   "categories": [
+    "Zoan",
+    "Mythical Zoan",
+    "Ancient Zoan"
+   ]
+  },
+  {
+   "prompt": "Name a sword",
+   "categories": [
+    "Swords"
+   ]
+  },
+  {
+   "prompt": "Name a named weapon",
+   "infobox": "Weapon Box"
+  },
+  {
+   "prompt": "Name a ship",
+   "infobox": "Ship Box"
+  },
+  {
+   "prompt": "Name a pirate crew",
+   "infobox": "Crew Box"
+  },
+  {
+   "prompt": "Name a story arc",
+   "categories": [
+    "Story Arcs"
+   ]
+  },
+  {
+   "prompt": "Name a fighting style",
+   "categories": [
+    "Fighting Styles"
+   ]
+  },
+  {
+   "prompt": "Name an animal",
+   "categories": [
+    "Animals",
+    "Pets",
+    "Sea Kings"
+   ]
+  },
+  {
+   "prompt": "Name a king",
+   "categories": [
+    "Kings"
+   ]
+  },
+  {
+   "prompt": "Name a character who has died",
+   "categories": [
+    "Deceased Characters"
+   ]
+  },
+  {
+   "prompt": "Name a Marine",
+   "affiliations": [
+    "Marines"
+   ]
+  },
+  {
+   "prompt": "Name a Beasts Pirate",
+   "affiliations": [
+    "Beasts Pirates"
+   ]
+  },
+  {
+   "prompt": "Name a Big Mom Pirate",
+   "affiliations": [
+    "Big Mom Pirates"
+   ]
+  },
+  {
+   "prompt": "Name a member of the Charlotte Family",
+   "affiliations": [
+    "Charlotte Family"
+   ]
+  },
+  {
+   "prompt": "Name a member of the Wano alliance (Ninja-Pirate-Mink-Samurai)",
+   "affiliations": [
+    "Ninja-Pirate-Mink-Samurai Alliance"
+   ]
+  },
+  {
+   "prompt": "Name a Whitebeard Pirate",
+   "affiliations": [
+    "Whitebeard Pirates"
+   ]
+  },
+  {
+   "prompt": "Name a member of the Straw Hat Grand Fleet",
+   "affiliations": [
+    "Straw Hat Grand Fleet"
+   ]
+  },
+  {
+   "prompt": "Name a Baroque Works member",
+   "affiliations": [
+    "Baroque Works"
+   ]
+  },
+  {
+   "prompt": "Name someone from Impel Down (guard or prisoner)",
+   "affiliations": [
+    "Impel Down"
+   ]
+  },
+  {
+   "prompt": "Name a member of the Kouzuki Family",
+   "affiliations": [
+    "Kouzuki Family"
+   ]
+  },
+  {
+   "prompt": "Name a World Government member",
+   "affiliations": [
+    "World Government"
+   ]
+  },
+  {
+   "prompt": "Name a Roger Pirate",
+   "affiliations": [
+    "Roger Pirates"
+   ]
+  },
+  {
+   "prompt": "Name a Foxy Pirate",
+   "affiliations": [
+    "Foxy Pirates"
+   ]
+  },
+  {
+   "prompt": "Name a Donquixote Pirate",
+   "affiliations": [
+    "Donquixote Pirates"
+   ]
+  },
+  {
+   "prompt": "Name a Devil Fruit user",
+   "devil_fruit_type": "any"
+  },
+  {
+   "prompt": "Name a Paramecia user",
+   "devil_fruit_type": "Paramecia"
+  },
+  {
+   "prompt": "Name a Zoan user",
+   "devil_fruit_type": "Zoan"
+  },
+  {
+   "prompt": "Name someone who was at the Marineford war",
+   "event": "Summit War of Marineford",
+   "chapters": [
+    550,
+    580
+   ]
+  },
+  {
+   "prompt": "Name someone who was in Wano",
+   "event": "Raid on Onigashima",
+   "arc": "Wano Country Arc",
+   "groups": [
+    "Ninja-Pirate-Mink-Samurai Alliance",
+    "Beasts Pirates",
+    "Kurozumi Family",
+    "Kouzuki Family",
+    "Wano Country",
+    "Flower Capital",
+    "Straw Hat Pirates",
+    "Kid Pirates",
+    "Heart Pirates",
+    "Big Mom Pirates",
+    "Kuri",
+    "Ebisu Town",
+    "Udon",
+    "Ringo",
+    "Hakumai",
+    "Kibi",
+    "Onigashima",
+    "Shogunate",
+    "Akazaya Nine"
+   ]
+  },
+  {
+   "prompt": "Name someone who was on Egghead",
+   "event": "Egghead Incident",
+   "arc": "Egghead Arc",
+   "groups": [
+    "Egghead",
+    "Straw Hat Pirates",
+    "CP0",
+    "Giant Warrior Pirates",
+    "Vegapunk",
+    "Seraphim",
+    "Pacifista",
+    "Five Elders",
+    "Marines",
+    "Labophase",
+    "Punk Records",
+    "Kizaru",
+    "Sentomaru"
+   ]
+  },
+  {
+   "prompt": "Name a character whose name starts with A (epithets count)",
+   "starts_with": "A"
+  },
+  {
+   "prompt": "Name a character whose name starts with B (epithets count)",
+   "starts_with": "B"
+  },
+  {
+   "prompt": "Name a character whose name starts with C (epithets count)",
+   "starts_with": "C"
+  },
+  {
+   "prompt": "Name a character whose name starts with D (epithets count)",
+   "starts_with": "D"
+  },
+  {
+   "prompt": "Name a character whose name starts with G (epithets count)",
+   "starts_with": "G"
+  },
+  {
+   "prompt": "Name a character whose name starts with H (epithets count)",
+   "starts_with": "H"
+  },
+  {
+   "prompt": "Name a character whose name starts with K (epithets count)",
+   "starts_with": "K"
+  },
+  {
+   "prompt": "Name a character whose name starts with L (epithets count)",
+   "starts_with": "L"
+  },
+  {
+   "prompt": "Name a character whose name starts with M (epithets count)",
+   "starts_with": "M"
+  },
+  {
+   "prompt": "Name a character whose name starts with P (epithets count)",
+   "starts_with": "P"
+  },
+  {
+   "prompt": "Name a character whose name starts with R (epithets count)",
+   "starts_with": "R"
+  },
+  {
+   "prompt": "Name a character whose name starts with S (epithets count)",
+   "starts_with": "S"
+  },
+  {
+   "prompt": "Name a character whose name starts with T (epithets count)",
+   "starts_with": "T"
+  }
+ ]
+}

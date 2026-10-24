@@ -1,0 +1,40 @@
+{
+  "_help": "Your manual choices. These are applied after every wiki update, so they never get overwritten. Use the prompt text exactly as it appears in prompts.json, and answer names exactly as they appear in exports/one-piece-trivia-all-answers.csv. Tier names: Cabin Mate, Captain, Rookies, Supernova, Yonko, Pirate King. If a name isn't found (say the wiki renamed a page), update.bat prints a WARNING and skips it.",
+  "pirate_king": {
+    "_example: Name a cook": "Hewitt"
+  },
+  "tiers": {
+    "_example: Name a swordsman": {
+      "Charlotte Linlin": "Rookies"
+    }
+  },
+  "exclude": {
+    "Name a Devil Fruit": [
+      "SMILE",
+      "Akuma no Mi",
+      "Artificial Devil Fruit"
+    ],
+    "Name a named weapon": [
+      "Firearm",
+      "Dials",
+      "Explosive",
+      "Ancient Weapons",
+      "Laser",
+      "Mother Flame"
+    ],
+    "Name a ship": [
+      "Ship",
+      "Marine Ships"
+    ],
+    "Name a Zoan Devil Fruit": [
+      "SMILE"
+    ]
+  },
+  "aliases": {
+    "_example: Name a swordsman": {
+      "Roronoa Zoro": [
+        "Pirate Hunter"
+      ]
+    }
+  }
+}

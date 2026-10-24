@@ -1,0 +1,722 @@
+<meta charset="utf-8">
+<title>One Piece Trivia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Layout: one column voyage — pixel sea stage on top, route track, then prompt card beside a wanted poster */
+:root {
+  --night: #0e1730;
+  --panel: #18264a;
+  --panel-edge: #2c4277;
+  --ink: #f4ead2;
+  --muted: #a9b6d3;
+  --gold: #f2b33d;
+  --red: #e0533f;
+  --sea: #2f7fc1;
+  --parch: #ead4a2;
+  --parch-ink: #4a2e17;
+  --t0: #a7b2c4; --t1: #e8a35a; --t2: #74cf72; --t3: #5fb0ff; --t4: #be8cff; --t5: #f2b33d;
+  --display: "Press Start 2P", ui-monospace, "Courier New", monospace;
+  --body: "VT323", ui-monospace, "Courier New", monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: auto; }
+body { background: var(--night); color: var(--ink); font-family: var(--body); font-size: 22px; line-height: 1.15; }
+.wrap {
+  max-width: 980px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 32px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.logo { font-family: var(--display); font-size: 14px; letter-spacing: 1px; color: var(--gold); margin: 0; }
+.logo span { color: var(--ink); }
+.best { color: var(--muted); font-size: 20px; font-variant-numeric: tabular-nums; }
+
+.stage { position: relative; border: 4px solid var(--panel-edge); background: #5fb8f0; box-shadow: 0 0 0 4px #000; }
+canvas#sea { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; image-rendering: crisp-edges; }
+.hud { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
+.chip { font-family: var(--display); font-size: 9px; background: rgba(14,23,48,.82); color: var(--ink); padding: 6px 8px; border: 2px solid #000; }
+.chip b { color: var(--gold); font-weight: normal; }
+.title-card { position: absolute; inset: 0 0 auto 0; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 5% 16px 0; }
+.title-card h1 {
+  font-family: var(--display); font-size: clamp(16px, 3.8vw, 36px); margin: 0; line-height: 1.25;
+  color: var(--ink); text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+}
+.title-card h1 em { font-style: normal; color: var(--gold); }
+.title-card p { margin: 0; font-size: clamp(18px, 2.4vw, 24px); background: rgba(14,23,48,.8); padding: 2px 10px; }
+.toast {
+  position: absolute; left: 50%; top: 22%; transform: translateX(-50%);
+  font-family: var(--display); font-size: clamp(10px, 1.8vw, 16px); background: var(--night); color: var(--gold);
+  padding: 10px 14px; border: 3px solid var(--gold); box-shadow: 4px 4px 0 #000; white-space: nowrap;
+}
+
+.btn { font-family: var(--display); font-size: 12px; color: #1b1205; background: var(--gold); border: 3px solid #000; box-shadow: 4px 4px 0 #000; padding: 12px 16px; cursor: pointer; }
+.btn:hover { filter: brightness(1.08); }
+.btn.alt { background: var(--ink); }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.share { margin: 0; font-family: var(--body); font-size: 24px; line-height: 1.25; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--night); border: 3px solid #000; box-shadow: inset 0 0 0 2px var(--panel-edge); padding: 10px 12px; user-select: all; }
+.btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+.btn:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+.route { display: flex; flex-direction: column; gap: 6px; }
+.track { position: relative; height: 14px; background: var(--panel); border: 3px solid #000; }
+.fill { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(90deg, var(--sea) 0 6px, #3f95d8 6px 12px); width: 0; transition: width .6s steps(12); }
+.stop { position: absolute; top: -5px; width: 6px; height: 18px; background: #000; transform: translateX(-3px); }
+.stop.on { background: var(--gold); }
+.stops { position: relative; height: 22px; font-size: 18px; color: var(--muted); }
+.stops span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.stops span:first-child { transform: none; }
+.stops span:last-child { transform: translateX(-100%); }
+.stops span.on { color: var(--ink); }
+.stops b { font-weight: normal; } .stops s { display: none; text-decoration: none; }
+
+.play { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 14px; align-items: start; }
+.card { background: var(--panel); border: 3px solid #000; box-shadow: inset 0 0 0 3px var(--panel-edge); padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.eyebrow { font-family: var(--display); font-size: 9px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+.prompt { font-family: var(--display); font-size: clamp(14px, 2.2vw, 20px); line-height: 1.5; margin: 0; text-wrap: balance; }
+form { display: flex; gap: 10px; flex-wrap: wrap; }
+input#guess { flex: 1 1 200px; min-width: 0; font-family: var(--body); font-size: 26px; color: var(--ink); background: var(--night); border: 3px solid #000; box-shadow: inset 0 0 0 2px var(--panel-edge); padding: 6px 10px; }
+input#guess::placeholder { color: #6e7fa6; }
+.timer { display: flex; align-items: center; gap: 10px; }
+.timer .bar { flex: 1; height: 12px; background: var(--night); border: 3px solid #000; position: relative; }
+.timer .bar i { position: absolute; inset: 0 auto 0 0; background: var(--gold); }
+.timer .bar.low i { background: var(--red); }
+.timer span { font-family: var(--display); font-size: 12px; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+.note { color: var(--muted); margin: 0; }
+.note.warn { color: var(--gold); }
+.note s, .king s { color: var(--red); text-decoration-thickness: 2px; }
+@keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+input#guess.shake { animation: shake .3s steps(4); box-shadow: inset 0 0 0 2px var(--red); }
+@media (prefers-reduced-motion: reduce) { input#guess.shake { animation: none; } }
+.result { display: flex; flex-direction: column; gap: 8px; }
+.tier { font-family: var(--display); font-size: 12px; padding: 6px 8px; align-self: flex-start; color: #120c03; border: 2px solid #000; white-space: nowrap; }
+.answer { font-size: 34px; margin: 0; overflow-wrap: anywhere; }
+.gains { display: flex; gap: 18px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.gains b { color: var(--gold); font-weight: normal; }
+.miss { color: var(--red); font-family: var(--display); font-size: 12px; }
+.tag { font-family: var(--display); font-size: 8px; color: var(--ink); background: #3a2f5c; padding: 4px 6px; margin-left: 8px; vertical-align: middle; }
+.legend { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: center; margin: 0; }
+.legend i { width: 14px; height: 14px; border: 2px solid #000; display: inline-block; }
+.legend dd { margin: 0; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.legend dt { margin: 0; }
+
+.totals { display: flex; gap: 24px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.totals div { display: flex; flex-direction: column; }
+.totals small { font-family: var(--display); font-size: 8px; color: var(--muted); letter-spacing: 1px; }
+.totals b { font-weight: normal; font-size: 32px; color: var(--gold); }
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.log li { border-top: 2px solid var(--panel-edge); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+.log .head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.log .q { font-family: var(--display); font-size: 10px; line-height: 1.5; }
+.log .pts { color: var(--gold); font-variant-numeric: tabular-nums; }
+.log .mine { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.log .mine .tier { font-size: 9px; padding: 4px 6px; }
+.log .king { color: var(--muted); margin: 0; }
+.log .king b { color: var(--t5); font-weight: normal; }
+details summary { cursor: pointer; color: var(--ink); font-size: 20px; }
+.tiers { max-height: 260px; overflow-y: auto; padding: 8px 4px 0; display: flex; flex-direction: column; gap: 8px; }
+.tiers h4 { margin: 0; font-family: var(--display); font-size: 9px; letter-spacing: 1px; }
+.tiers p { margin: 0; color: var(--muted); font-size: 19px; line-height: 1.2; }
+.tiers p em { font-style: normal; color: #8c7fc0; }
+
+.poster { background: var(--parch); color: var(--parch-ink); border: 3px solid #000; box-shadow: 4px 4px 0 #000; padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.poster h2 { font-family: var(--display); font-size: 20px; margin: 0; letter-spacing: 2px; }
+.poster canvas { width: 160px; max-width: 100%; height: auto; aspect-ratio: 4 / 3; image-rendering: pixelated; background: #d8bd84; border: 3px solid var(--parch-ink); }
+.poster .lbl { font-family: var(--display); font-size: 8px; letter-spacing: 1px; }
+.poster .bounty { font-size: 28px; font-variant-numeric: tabular-nums; margin: -4px 0 0; }
+.poster .row { display: flex; justify-content: space-between; width: 100%; font-size: 20px; border-top: 2px dashed rgba(74,46,23,.4); padding-top: 6px; }
+
+footer { color: #6e7fa6; font-size: 18px; }
+
+@media (max-width: 640px) {
+  .play { grid-template-columns: minmax(0, 1fr); }
+  .poster { flex-direction: row; flex-wrap: wrap; justify-content: space-between; text-align: left; }
+  .poster canvas { width: 96px; }
+  .chip { font-size: 7px; }
+  .title-card p { display: none; }
+  .title-card .btn { font-size: 10px; padding: 8px 10px; }
+  .stops { font-size: 17px; } .stops b { display: none; } .stops s { display: inline; }
+  .stops span:not(:first-child):not(:last-child) { display: none; }
+  .card { padding: 14px; }
+  .legend { font-size: 19px; }
+}
+@media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="logo">ONE PIECE <span>TRIVIA</span></p>
+    <div class="best" id="best">Best bounty: ฿0</div>
+  </header>
+
+  <div class="stage">
+    <canvas id="sea" width="256" height="144" aria-label="Your ship at sea, chased by Marine ships"></canvas>
+    <div class="hud" id="hud" hidden>
+      <div class="chip" id="hudArea">SHELLS TOWN</div>
+      <div class="chip">POINTS <b id="hudPts">0</b>/700</div>
+    </div>
+    <div class="title-card" id="title">
+      <h1>ONE PIECE <em>TRIVIA</em></h1>
+      <p>Rare answers raise your bounty. More Marines give chase.</p>
+      <div class="actions" style="justify-content:center">
+        <button class="btn" id="startBtn" type="button">DAILY VOYAGE</button>
+        <button class="btn alt" id="freeBtn" type="button">FREE PLAY</button>
+      </div>
+    </div>
+    <div class="toast" id="toast" hidden></div>
+  </div>
+
+  <div class="route" aria-label="Voyage route">
+    <div class="track"><div class="fill" id="fill"></div><span id="stopMarks"></span></div>
+    <div class="stops" id="stops"></div>
+  </div>
+
+  <div class="play">
+    <section class="card" id="card" aria-live="polite"></section>
+    <aside class="poster" aria-label="Your wanted poster">
+      <h2>WANTED</h2>
+      <canvas id="mug" width="48" height="36"></canvas>
+      <div>
+        <div class="lbl">BOUNTY</div>
+        <p class="bounty" id="bounty">฿0</p>
+      </div>
+      <div class="row"><span>Marine ships</span><span id="marines">1</span></div>
+      <div class="row"><span>Prompt</span><span id="count">0/7</span></div>
+    </aside>
+  </div>
+
+  <footer>Answer lists built from the One Piece Wiki (CC-BY-SA). Fan-made and unofficial.</footer>
+</div>
+
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(() => {
+const DATA = JSON.parse(document.getElementById('data').textContent);
+// ---------- rules (edit these) ----------
+const TIERS = [
+  { name: 'Cabin Mate',  pts: 10,  color: 'var(--t0)' },
+  { name: 'Captain',     pts: 15,  color: 'var(--t1)' },
+  { name: 'Rookies',     pts: 30,  color: 'var(--t2)' },
+  { name: 'Supernova',   pts: 60,  color: 'var(--t3)' },
+  { name: 'Yonko',       pts: 85,  color: 'var(--t4)' },
+  { name: 'Pirate King', pts: 100, color: 'var(--t5)' },
+];
+const BERRY_PER_POINT = 1e6;
+const PROMPTS_PER_VOYAGE = 7;
+const SECONDS = 25;
+const AREAS = [ // Elbaf is only reachable with all Pirate King answers
+  { name: 'Shells Town', short: 'Shells', at: 0 },
+  { name: 'Baratie', short: 'Baratie', at: 150 },
+  { name: 'Arlong Park', short: 'Arlong', at: 300 },
+  { name: 'Reverse Mountain', short: 'Rev. Mtn', at: 450 },
+  { name: 'Elbaf', short: 'Elbaf', at: 700 },
+];
+const GOAL = AREAS[AREAS.length - 1].at;
+const CLIMB_AT = 450;
+const MARINE_AT = [0, 60e6, 150e6, 300e6, 450e6, 600e6];
+
+// ---------- answer matching ----------
+const norm = s => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g, '');
+DATA.forEach(p => {
+  p.idx = new Map();
+  p.a.forEach((ans, i) => {
+    for (const k of ans.k) {
+      if (!p.idx.has(k)) p.idx.set(k, i);
+      if (k.endsWith('nomi') && k.length > 8 && !p.idx.has(k.slice(0, -4))) p.idx.set(k.slice(0, -4), i);
+    }
+  });
+  p.king = p.a.find(x => x.t === 5);
+});
+function lev(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i]; let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (cur[j] < best) best = cur[j];
+    }
+    if (best > max) return max + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function findAnswer(p, guess) {
+  const g = norm(guess);
+  if (g.length < 2) return null;
+  if (p.idx.has(g)) return p.a[p.idx.get(g)];
+  const max = g.length >= 10 ? 2 : g.length >= 5 ? 1 : 0;
+  if (!max) return null;
+  let best = null, bd = max + 1;
+  for (const [k, i] of p.idx) {
+    const d = lev(g, k, max);
+    if (d < bd) { bd = d; best = i; if (d === 1 && max === 1) break; }
+  }
+  return best === null ? null : p.a[best];
+}
+
+// ---------- state ----------
+const fresh = () => ({ mode: 'free', day: '', phase: 'home', points: 0, bounty: 0, misses: 0, order: [], i: 0, cur: -1, log: [], result: null, climbed: false, climbT: 0 });
+let S = fresh();
+let best = 0;
+try { best = +localStorage.getItem('opt-best') || 0; } catch (e) {}
+const fmt = n => '฿' + Math.round(n).toLocaleString('en-US');
+const areaIndex = pts => AREAS.reduce((a, x, i) => (pts >= x.at ? i : a), 0);
+const marineCount = b => MARINE_AT.filter(x => b >= x).length;
+const isLast = () => S.i >= PROMPTS_PER_VOYAGE;
+// Prompt families that shouldn't crowd a voyage (e.g. at most one letter prompt)
+const FAMILY_LIMITS = [{ test: /starts with [A-Z]\b/, max: 1 }];
+// Daily voyage: the date picks the prompts, so everyone gets the same seven that day
+const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const dayLabel = k => new Date(k + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function seeded(str) {
+  let h = 2166136261;
+  for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return () => { h |= 0; h = (h + 0x6D2B79F5) | 0; let x = Math.imul(h ^ (h >>> 15), 1 | h); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+}
+const dailyStoreKey = k => 'opt-daily-' + k;
+function savedDaily() { try { return JSON.parse(localStorage.getItem(dailyStoreKey(todayKey())) || 'null'); } catch (e) { return null; } }
+function pickPrompts(rand) {
+  const used = FAMILY_LIMITS.map(() => 0), out = [];
+  for (const i of shuffle(DATA.length, rand)) {
+    const f = FAMILY_LIMITS.findIndex(x => x.test.test(DATA[i].p));
+    if (f >= 0) { if (used[f] >= FAMILY_LIMITS[f].max) continue; used[f]++; }
+    out.push(i);
+    if (out.length === PROMPTS_PER_VOYAGE) break;
+  }
+  return out;
+}
+function shuffle(n, rand = Math.random) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+const $ = id => document.getElementById(id);
+const card = $('card');
+let toastTimer;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 2600);
+}
+
+// route markers
+$('stopMarks').innerHTML = AREAS.map(a => `<i class="stop" style="left:${a.at / GOAL * 100}%"></i>`).join('');
+$('stops').innerHTML = AREAS.map(a => `<span style="left:${a.at / GOAL * 100}%"><b>${a.at && a.at < GOAL ? a.short : a.name}${a.at ? ' · ' + a.at : ''}</b><s>${a.short}</s></span>`).join('');
+
+// ---------- timer ----------
+let deadline = 0, tick = null;
+function startTimer() {
+  deadline = performance.now() + SECONDS * 1000;
+  clearInterval(tick);
+  tick = setInterval(() => {
+    const left = Math.max(0, deadline - performance.now());
+    const bar = $('timeBar'), num = $('timeNum');
+    if (bar) { bar.firstElementChild.style.width = (left / (SECONDS * 1000) * 100) + '%'; bar.classList.toggle('low', left < 6000); }
+    if (num) num.textContent = Math.ceil(left / 1000);
+    if (left <= 0) { clearInterval(tick); const v = $('guess') ? $('guess').value.trim() : ''; submitGuess(v, true); }
+  }, 100);
+}
+
+function startVoyage(mode) {
+  if (mode === 'daily') {
+    const saved = savedDaily();
+    if (saved) { showSaved(saved); return; }  // one daily voyage per day
+  }
+  S = fresh(); S.mode = mode === 'daily' ? 'daily' : 'free'; S.day = todayKey();
+  S.phase = 'prompt'; S.order = pickPrompts(S.mode === 'daily' ? seeded('op-trivia-' + S.day) : Math.random);
+  scene.reset();
+  nextPrompt();
+}
+function showSaved(saved) {
+  S = Object.assign(fresh(), saved, { phase: 'done' });
+  const k = areaIndex(S.points);
+  scene.islands = S.climbed && k < AREAS.length - 1 ? [] : [{ k, x: ISLAND_X[k], tx: ISLAND_X[k] }];
+  render();
+}
+function finishVoyage() {
+  S.phase = 'done';
+  if (S.mode === 'daily') { try { localStorage.setItem(dailyStoreKey(S.day), JSON.stringify(S)); } catch (e) {} }
+  render();
+}
+const TIER_SQUARES = ['⬜', '🟧', '🟩', '🟦', '🟪', '🟨'];
+function shareText() {
+  const ai = areaIndex(S.points);
+  const where = ai === AREAS.length - 1 ? 'Reached Elbaf!' : S.climbed && ai < AREAS.length - 1 ? 'Made it into the Grand Line' : 'Reached ' + AREAS[ai].name;
+  const squares = S.log.map(e => e.hit ? TIER_SQUARES[e.tier] : '🟥').join('');
+  const kings = S.log.filter(e => e.hit && e.tier === 5).length;
+  return [
+    `One Piece Trivia · ${S.mode === 'daily' ? dayLabel(S.day) : 'Free play'}`,
+    `${fmt(S.bounty)} bounty · ${S.points}/${GOAL}`,
+    where + (kings ? ` · ${kings} Pirate King answer${kings > 1 ? 's' : ''}` : ''),
+    squares,
+  ].join('\n');
+}
+async function copyShare(btn) {
+  const text = shareText();
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'COPIED!';
+  } catch (e) {
+    const r = document.createRange(); r.selectNodeContents($('shareText'));
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    btn.textContent = 'SELECTED: PRESS CTRL+C';
+  }
+  setTimeout(() => { btn.textContent = 'SHARE RESULT'; }, 2500);
+}
+function nextPrompt() {
+  S.cur = S.order[S.i++]; S.phase = 'prompt'; S.result = null; S.tries = [];
+  render(); startTimer();
+  setTimeout(() => $('guess') && $('guess').focus(), 30);
+}
+function submitGuess(text, timedOut) {
+  if (S.phase !== 'prompt') return;
+  const p = DATA[S.cur];
+  const hit = text ? findAnswer(p, text) : null;
+  if (!hit && text) S.tries.push(text);
+  if (!hit && !timedOut) {
+    // Wrong guess: the prompt stays open until a correct answer or the timer runs out
+    const g = $('guess'); g.value = ''; g.focus();
+    g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake');
+    const n = $('tries');
+    n.className = 'note warn';
+    n.innerHTML = `Not on the list: ${S.tries.map(x => '<s>' + esc(x) + '</s>').join(', ')}. Keep trying.`;
+    return;
+  }
+  clearInterval(tick);
+  const before = areaIndex(S.points);
+  if (hit) {
+    const t = TIERS[hit.t];
+    S.points += t.pts; S.bounty += t.pts * BERRY_PER_POINT;
+    S.result = { hit: true, name: hit.n, tier: hit.t, nc: hit.nc };
+  } else {
+    S.misses++;
+    S.result = { hit: false, timedOut: true };
+  }
+  S.log.push({ p: S.cur, tries: S.tries.slice(), ...S.result });
+  S.phase = 'result';
+  const after = areaIndex(S.points);
+  if (after > before) {
+    scene.arrive(after);
+    toast(AREAS[after].name === 'Reverse Mountain' ? 'REVERSE MOUNTAIN AHEAD' : 'ARRIVED: ' + AREAS[after].name.toUpperCase());
+  }
+  if (S.bounty > best) { best = S.bounty; try { localStorage.setItem('opt-best', best); } catch (e) {} }
+  render();
+  setTimeout(() => $('nextBtn') && $('nextBtn').focus(), 30);
+}
+function advance() {
+  if (!S.climbed && S.points >= CLIMB_AT) { S.phase = 'climb'; S.climbT = 0; render(); return; }
+  if (isLast()) { finishVoyage(); return; }
+  nextPrompt();
+}
+function afterClimb() {
+  S.climbed = true; scene.islands = [];
+  toast('WELCOME TO THE GRAND LINE');
+  if (S.points >= GOAL) scene.arrive(areaIndex(S.points));
+  if (isLast()) finishVoyage(); else nextPrompt();
+}
+
+// ---------- UI ----------
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+const badge = t => `<span class="tier" style="background:${TIERS[t].color}">${TIERS[t].name.toUpperCase()}</span>`;
+function nextLabel() {
+  if (!S.climbed && S.points >= CLIMB_AT) return 'CLIMB REVERSE MOUNTAIN';
+  return isLast() ? 'SEE RESULTS' : 'NEXT PROMPT';
+}
+function answerLists(p) {
+  return TIERS.map((t, ti) => ti).reverse().map(ti => {
+    const list = p.a.filter(x => x.t === ti);
+    if (!list.length) return '';
+    return `<h4 style="color:${TIERS[ti].color}">${TIERS[ti].name.toUpperCase()} · ${list.length}</h4>
+      <p>${list.map(x => esc(x.n) + (x.nc ? '<em>*</em>' : '')).join(', ')}</p>`;
+  }).join('');
+}
+function render() {
+  $('title').hidden = S.phase !== 'home';
+  $('hud').hidden = S.phase === 'home';
+  const ai = areaIndex(S.points);
+  $('hudArea').textContent = (S.climbed && ai < AREAS.length - 1 ? 'GRAND LINE' : AREAS[ai].name).toUpperCase();
+  $('hudPts').textContent = S.points;
+  $('fill').style.width = Math.min(100, S.points / GOAL * 100) + '%';
+  document.querySelectorAll('.stop').forEach((el, i) => el.classList.toggle('on', S.points >= AREAS[i].at));
+  document.querySelectorAll('#stops span').forEach((el, i) => el.classList.toggle('on', S.points >= AREAS[i].at));
+  $('bounty').textContent = fmt(S.bounty);
+  $('best').textContent = 'Best bounty: ' + fmt(best);
+  $('marines').textContent = marineCount(S.bounty);
+  $('count').textContent = `${S.i}/${PROMPTS_PER_VOYAGE}`;
+
+  const p = S.cur >= 0 ? DATA[S.cur] : null;
+  if (S.phase === 'home') {
+    card.innerHTML = `
+      <div class="eyebrow">How a voyage works</div>
+      <p class="note" style="color:var(--ink)">Seven prompts, ${SECONDS} seconds each. Keep guessing until you land an answer on the list or time runs out. The fewer people who'd think of your answer, the more it's worth. Answer all seven at Pirate King rarity to reach Elbaf. Every answer list is revealed when the voyage ends.</p>
+      <dl class="legend">${TIERS.slice().reverse().map(t => `<i style="background:${t.color}"></i><dt>${t.name}</dt><dd>+${t.pts} · ฿${t.pts}M</dd>`).join('')}</dl>
+      <p class="note">Anime-only answers count, up to Yonko.</p>
+      <p class="note" style="color:var(--ink)">${savedDaily() ? "You've sailed today's daily voyage. Press Daily voyage to see and share your result." : 'Daily voyage: the same seven prompts for everyone today, one try. Free play: random prompts, play as often as you like.'}</p>`;
+  } else if (S.phase === 'prompt') {
+    card.innerHTML = `
+      <div class="eyebrow">Prompt ${S.i} of ${PROMPTS_PER_VOYAGE}</div>
+      <h2 class="prompt">${esc(p.p)}</h2>
+      <div class="timer"><div class="bar" id="timeBar"><i style="width:100%"></i></div><span id="timeNum">${SECONDS}</span></div>
+      <form id="f" autocomplete="off">
+        <input id="guess" type="text" placeholder="Your answer" aria-label="Your answer" maxlength="60">
+        <button class="btn" type="submit">ANSWER</button>
+      </form>
+      <p class="note" id="tries">Wrong guesses don't end the prompt. Keep trying until the timer runs out.</p>`;
+    $('f').addEventListener('submit', e => { e.preventDefault(); const v = $('guess').value.trim(); if (v) submitGuess(v, false); });
+  } else if (S.phase === 'result') {
+    const r = S.result;
+    const body = r.hit
+      ? `${badge(r.tier)}
+         <p class="answer">${esc(r.name)}${r.nc ? '<span class="tag">ANIME-ONLY</span>' : ''}</p>
+         <div class="gains"><span>+<b>${TIERS[r.tier].pts}</b> points</span><span>+<b>${fmt(TIERS[r.tier].pts * BERRY_PER_POINT)}</b> bounty</span></div>
+         ${S.tries.length ? `<p class="note">After ${S.tries.length} wrong guess${S.tries.length > 1 ? 'es' : ''}: ${S.tries.map(x => '<s>' + esc(x) + '</s>').join(', ')}</p>` : ''}`
+      : `<span class="miss">TIME'S UP</span>
+         <p class="note">${S.tries.length ? 'Your guesses: ' + S.tries.map(x => '<s>' + esc(x) + '</s>').join(', ') + '. ' : ''}No points. The Marines close in.</p>`;
+    card.innerHTML = `
+      <div class="eyebrow">Prompt ${S.i} of ${PROMPTS_PER_VOYAGE} · ${esc(p.p)}</div>
+      <div class="result">${body}</div>
+      <div><button class="btn" id="nextBtn" type="button">${nextLabel()}</button></div>`;
+    $('nextBtn').addEventListener('click', advance);
+  } else if (S.phase === 'climb') {
+    card.innerHTML = `<div class="eyebrow">Reverse Mountain</div><h2 class="prompt">Riding the current up the mountain…</h2>`;
+  } else if (S.phase === 'done') {
+    const reached = AREAS[ai].name;
+    card.innerHTML = `
+      <div class="eyebrow">${S.mode === 'daily' ? 'Daily voyage · ' + esc(dayLabel(S.day)) : 'Free play'} · complete</div>
+      <h2 class="prompt">${ai === AREAS.length - 1 ? 'You reached Elbaf. A perfect voyage.' : 'Your voyage ended near ' + esc(S.climbed && ai < 4 ? 'the Grand Line' : reached) + '.'}</h2>
+      <div class="totals">
+        <div><small>POINTS</small><b>${S.points}</b></div>
+        <div><small>BOUNTY</small><b>${fmt(S.bounty)}</b></div>
+        <div><small>MAX</small><b>${GOAL}</b></div>
+      </div>
+      <pre class="share" id="shareText" aria-label="Your result to share">${esc(shareText())}</pre>
+      <div class="actions">
+        <button class="btn" id="shareBtn" type="button">SHARE RESULT</button>
+        <button class="btn alt" id="againBtn" type="button">${S.mode === 'daily' ? 'FREE PLAY' : 'SAIL AGAIN'}</button>
+      </div>
+      ${S.mode === 'daily' ? '<p class="note">Everyone gets the same seven prompts today. New voyage tomorrow.</p>' : '<p class="note">Free play uses random prompts, so scores aren\'t comparable. Use the daily voyage to compete.</p>'}
+      <ol class="log">${S.log.map(e => {
+        const q = DATA[e.p];
+        const mine = e.hit
+          ? `${badge(e.tier)}<span>${esc(e.name)}${e.nc ? '<span class="tag">ANIME-ONLY</span>' : ''}</span>`
+          : `<span class="miss">TIME'S UP</span>`;
+        const tried = (e.tries || []).length ? `<p class="king">Wrong guesses: ${e.tries.map(x => '<s>' + esc(x) + '</s>').join(', ')}</p>` : '';
+        return `<li>
+          <div class="head"><span class="q">${esc(q.p)}</span><span class="pts">+${e.hit ? TIERS[e.tier].pts : 0}</span></div>
+          <div class="mine">${mine}</div>${tried}
+          ${q.king ? `<p class="king">Pirate King answer: <b>${esc(q.king.n)}</b></p>` : ''}
+          <details><summary>See all ${q.a.length} answers</summary><div class="tiers">${answerLists(q)}</div></details>
+        </li>`; }).join('')}</ol>
+      <p class="note">* anime-only</p>`;
+    $('againBtn').addEventListener('click', () => startVoyage('free'));
+    $('shareBtn').addEventListener('click', e => copyShare(e.currentTarget));
+  }
+}
+$('startBtn').addEventListener('click', () => startVoyage('daily'));
+$('freeBtn').addEventListener('click', () => startVoyage('free'));
+
+// ---------- pixel scene ----------
+const cv = $('sea'), g = cv.getContext('2d');
+const W = 256, H = 144, HZ = 80;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const px = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
+
+const PLAYER = { hull: '#8a4b2a', deck: '#b56b3c', stripe: '#e8c27a', keel: '#4b2414', win: '#ffd76a', mast: '#5a3219', sail: '#f6efdc', shade: '#d6caa9', flag: '#161616', emb: '#e2452f', fig: '#f29a2e' };
+const MARINE = { hull: '#46536e', deck: '#6d7c99', stripe: '#e9eef6', keel: '#252d3f', win: '#ffd76a', mast: '#3a2f2a', sail: '#f3f6fb', shade: '#c4cfe0', flag: '#2d5fb3', emb: '#2d5fb3', fig: '#e9eef6' };
+
+function ship(cx, wy, P, kind) {
+  cx = Math.round(cx); wy = Math.round(wy);
+  for (let r = 0; r < 8; r++) {
+    const y = wy - 8 + r, l = cx - 14 + Math.floor(r * 0.7), rt = cx + 15 - Math.floor(r * 1.3);
+    px(l, y, rt - l + 1, 1, r === 0 ? P.deck : r === 3 ? P.stripe : r === 7 ? P.keel : P.hull);
+  }
+  if (kind === 'marine') for (let x = cx - 9; x < cx + 9; x += 4) px(x, wy - 5, 2, 1, P.keel);
+  px(cx - 14, wy - 12, 8, 4, P.hull); px(cx - 14, wy - 12, 8, 1, P.deck);
+  px(cx - 12, wy - 10, 1, 1, P.win); px(cx - 9, wy - 10, 1, 1, P.win);
+  for (let x = cx - 5; x <= cx + 10; x += 3) px(x, wy - 9, 1, 1, P.keel);
+  px(cx, wy - 41, 1, 33, P.mast);
+  px(cx - 9, wy - 29, 19, 1, P.mast); px(cx - 9, wy - 13, 19, 1, P.mast);
+  for (let y = wy - 28; y < wy - 13; y++) {
+    const k = (y - (wy - 28)) / 15, b = Math.round(Math.sin(k * Math.PI) * 2);
+    px(cx - 8, y, 16 + b, 1, P.sail); px(cx - 8, y, 1, 1, P.shade);
+  }
+  px(cx - 6, wy - 35, 13, 1, P.mast);
+  for (let y = wy - 34; y < wy - 30; y++) px(cx - 5, y, 11, 1, P.sail);
+  const fl = Math.round(Math.sin(T * 6 + cx) * 0.6);
+  px(cx + 1, wy - 41 + fl, 7, 4, P.flag);
+  if (kind === 'player') {
+    px(cx - 2, wy - 24, 5, 7, P.emb); px(cx - 3, wy - 23, 7, 5, P.emb); px(cx - 1, wy - 22, 2, 2, '#f7a340');
+    px(cx + 2, wy - 40 + fl, 1, 1, '#eee'); px(cx + 6, wy - 40 + fl, 1, 1, '#eee'); px(cx + 3, wy - 39 + fl, 3, 1, '#eee');
+    px(cx + 2, wy - 38 + fl, 1, 1, '#eee'); px(cx + 6, wy - 38 + fl, 1, 1, '#eee');
+    for (let i = 0; i < 7; i++) px(cx + 13 + i, wy - 8 - (i >> 1), 1, 1, P.mast);
+    px(cx + 13, wy - 13, 4, 4, P.fig); px(cx + 12, wy - 12, 6, 2, P.fig); px(cx + 15, wy - 12, 1, 1, '#2b1a10'); px(cx + 11, wy - 14, 2, 1, P.fig);
+  } else {
+    px(cx, wy - 25, 1, 8, P.emb); px(cx - 2, wy - 24, 5, 1, P.emb); px(cx - 1, wy - 26, 3, 1, P.emb);
+    px(cx - 3, wy - 19, 1, 1, P.emb); px(cx + 3, wy - 19, 1, 1, P.emb); px(cx - 2, wy - 18, 5, 1, P.emb);
+    px(cx + 2, wy - 40 + fl, 5, 2, '#f3f6fb');
+    for (let i = 0; i < 6; i++) px(cx + 13 + i, wy - 8 - (i >> 1), 1, 1, P.mast);
+  }
+}
+function wake(cx, wy, n) {
+  for (let i = 0; i < n; i++) {
+    const d = (i * 9 + T * 26) % 70;
+    px(cx - 15 - d, wy + (i % 3), Math.max(1, 4 - Math.floor(d / 20)), 1, '#d8f0ff');
+  }
+  px(cx + 14 + (Math.floor(T * 4) % 2), wy, 3, 1, '#ffffff');
+}
+
+// islands
+function shellsTown(x) {
+  px(x - 36, HZ - 2, 72, 2, '#e8d39a');
+  for (let r = 0; r < 12; r++) px(x - 32 + r * 1.5, HZ - 3 - r, 64 - r * 3, 1, r % 4 === 0 ? '#4f9b4c' : '#5fae55');
+  [[-22, 8], [-12, 10], [-2, 9], [16, 8]].forEach(([dx, h]) => { px(x + dx, HZ - 4 - h, 8, h, '#efe3c8'); px(x + dx - 1, HZ - 6 - h, 10, 2, '#c4483a'); px(x + dx + 3, HZ - 2 - h + 2, 2, 2, '#6b4a2a'); });
+  px(x + 4, HZ - 34, 9, 24, '#9aa3ad'); for (let i = 0; i < 9; i += 2) px(x + 4 + i, HZ - 36, 1, 2, '#9aa3ad');
+  px(x + 6, HZ - 28, 2, 3, '#4a5260'); px(x + 9, HZ - 20, 2, 3, '#4a5260');
+  px(x + 8, HZ - 44, 1, 8, '#4a5260'); px(x + 9, HZ - 44 + Math.round(Math.sin(T * 5)), 6, 3, '#2d5fb3');
+  px(x - 6, HZ - 12, 30, 2, '#8c949e');
+}
+function baratie(x) {
+  px(x - 28, HZ + 1, 56, 2, '#4b2414'); px(x - 32, HZ - 2, 64, 3, '#7a4422');
+  px(x - 22, HZ - 13, 44, 11, '#efe3c8'); for (let i = -18; i < 20; i += 6) px(x + i, HZ - 10, 3, 3, '#ffd76a');
+  px(x - 25, HZ - 16, 50, 3, '#3f8a5a'); px(x - 12, HZ - 24, 24, 8, '#efe3c8'); px(x - 14, HZ - 27, 28, 3, '#3f8a5a');
+  px(x - 7, HZ - 22, 3, 3, '#ffd76a'); px(x + 4, HZ - 22, 3, 3, '#ffd76a');
+  px(x - 6, HZ - 19, 12, 3, '#c4483a');
+  px(x + 7, HZ - 33, 4, 6, '#7a4422');
+  for (let i = 0; i < 3; i++) { const k = (T * 0.5 + i / 3) % 1; px(x + 8 + k * 6, HZ - 36 - k * 14, 3 - Math.floor(k * 2), 2, '#e6eef5'); }
+  px(x - 36, HZ - 4, 4, 1, '#4b2414'); px(x + 32, HZ - 4, 4, 1, '#4b2414');
+}
+function arlongPark(x) {
+  px(x - 40, HZ - 2, 80, 2, '#e8d39a'); px(x - 38, HZ - 5, 76, 3, '#5fae55');
+  px(x - 26, HZ - 20, 52, 15, '#8a8f98'); for (let i = -26; i < 26; i += 4) px(x + i, HZ - 22, 2, 2, '#8a8f98');
+  for (let i = -24; i < 24; i += 8) px(x + i, HZ - 14, 6, 1, '#767b84');
+  px(x - 4, HZ - 14, 8, 9, '#2b2f38'); px(x - 3, HZ - 15, 6, 1, '#2b2f38');
+  [-32, 24].forEach(dx => { px(x + dx, HZ - 30, 8, 25, '#7d828b'); px(x + dx - 1, HZ - 32, 10, 2, '#2f6f73'); px(x + dx + 1, HZ - 34, 6, 2, '#2f6f73'); px(x + dx + 3, HZ - 36, 2, 2, '#2f6f73'); px(x + dx + 3, HZ - 24, 2, 3, '#2b2f38'); });
+  [-46, 44].forEach(dx => { px(x + dx, HZ - 16, 2, 12, '#7a4422'); px(x + dx - 4, HZ - 18, 10, 2, '#3f8a5a'); px(x + dx - 6, HZ - 16, 3, 2, '#3f8a5a'); px(x + dx + 5, HZ - 16, 3, 2, '#3f8a5a'); });
+}
+function reverseMountain(x) {
+  for (let y = 0; y < HZ; y++) {
+    const jag = Math.round(Math.sin(y * 0.7) * 2 + Math.sin(y * 0.23) * 4);
+    px(x + jag, y, W - x - jag + 40, 1, (y + 3) % 9 < 2 ? '#7e3329' : '#9c4436');
+  }
+  for (let y = 0; y < HZ; y++) px(x + 6 + Math.round(Math.sin(y * 0.4)), y, 2, 1, '#6c2b22');
+  const cx = x + 30;
+  px(cx, 0, 12, HZ, '#3d8fd6'); px(cx, 0, 1, HZ, '#2a6fb0'); px(cx + 11, 0, 1, HZ, '#2a6fb0');
+  for (let i = 0; i < 14; i++) { const y = ((i * 23 - T * 40) % HZ + HZ) % HZ; px(cx + 2 + (i * 5) % 8, y, 1, 4, '#e6f4ff'); }
+  for (let i = 0; i < 6; i++) px(cx - 6 + i * 4, HZ - 1 + (Math.floor(T * 6 + i) % 2), 3, 1, '#ffffff');
+}
+function elbaf(x) {
+  // a vast island under one enormous tree, with giant-sized longhouses
+  px(x - 60, HZ - 3, 120, 3, '#cdb98a'); px(x - 56, HZ - 9, 112, 6, '#4f7f46');
+  px(x - 9, HZ - 60, 18, 52, '#6b4426'); px(x - 9, HZ - 60, 3, 52, '#553419');
+  px(x - 14, HZ - 12, 6, 4, '#6b4426'); px(x + 8, HZ - 12, 7, 4, '#6b4426');
+  [[-42, -78, 34, 14], [-20, -84, 44, 14], [8, -78, 36, 14], [-34, -68, 70, 10], [-48, -64, 26, 8], [24, -64, 26, 8]]
+    .forEach(([dx, dy, w, h], i) => px(x + dx, HZ + dy, w, h, i % 2 ? '#3f7a3c' : '#4c8f47'));
+  for (let i = 0; i < 9; i++) px(x - 40 + i * 9, HZ - 76 + (i % 3) * 5, 3, 2, '#6aa85f');
+  [[-50, 14], [24, 16]].forEach(([dx, w]) => {
+    px(x + dx, HZ - 18, w + 10, 9, '#8a5a32');
+    for (let r = 0; r < 5; r++) px(x + dx - 2 + r, HZ - 19 - r, w + 14 - r * 2, 1, '#c4483a');
+    px(x + dx + (w >> 1) + 3, HZ - 14, 4, 5, '#3a2414');
+  });
+}
+const ISLAND_DRAW = [shellsTown, baratie, arlongPark, reverseMountain, elbaf];
+const ISLAND_X = [190, 196, 190, 176, 196];
+
+const scene = {
+  islands: [{ k: 0, x: ISLAND_X[0], tx: ISLAND_X[0] }],
+  marineD: 64,
+  reset() { this.islands = [{ k: 0, x: 300, tx: ISLAND_X[0] }]; this.marineD = 64; },
+  arrive(k) { this.islands.forEach(i => (i.tx = -150)); this.islands.push({ k, x: 340, tx: ISLAND_X[k] }); },
+};
+
+const clouds = [[24, 14], [104, 26], [178, 8], [230, 30]];
+const MSLOTS = [[0, -6], [-30, 4], [-16, -14], [-46, -8], [-60, 6], [-36, -20]];
+let T = 0, last = performance.now();
+
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  T += dt * (reduce ? 0.25 : 1);
+  if (S.phase === 'climb') { drawClimb(dt); requestAnimationFrame(frame); return; }
+  const grand = S.climbed;
+
+  const sky = grand ? ['#3b2f5c', '#4a3a6e', '#5b4880', '#6d5893'] : ['#5fb8f0', '#74c4f2', '#8fd0f4', '#aadcf5'];
+  sky.forEach((c, i) => px(0, i * 20, W, 20, c));
+  for (let i = 1; i < 4; i++) for (let x = (i % 2); x < W; x += 2) px(x, i * 20 - 1, 1, 1, sky[i]);
+  if (!grand) { px(34, 16, 12, 10, '#fff4b8'); px(32, 18, 16, 6, '#fff4b8'); px(36, 14, 8, 14, '#fff4b8'); }
+  clouds.forEach(c => {
+    const x = ((c[0] - T * 3) % (W + 40) + W + 40) % (W + 40) - 30, y = c[1];
+    const col = grand ? '#8a7aa8' : '#ffffff';
+    px(x, y + 3, 26, 5, col); px(x + 5, y, 10, 4, col); px(x + 13, y + 1, 9, 3, col);
+  });
+
+  scene.islands.forEach(i => { const d = i.tx - i.x; i.x += Math.sign(d) * Math.min(Math.abs(d), 42 * dt); });
+  scene.islands = scene.islands.filter(i => i.x > -140);
+  scene.islands.forEach(i => ISLAND_DRAW[i.k](i.x));
+
+  const sea = grand ? ['#2a5a78', '#214a66', '#1a3c55'] : ['#2f7fc1', '#2a70b0', '#235f9a'];
+  px(0, HZ, W, 15, sea[0]); px(0, HZ + 15, W, 20, sea[1]); px(0, HZ + 35, W, H - HZ - 35, sea[2]);
+  px(0, HZ, W, 1, grand ? '#5d8fae' : '#8fd0f4');
+  for (let band = 0; band < 6; band++) {
+    const y = HZ + 4 + band * 10, sp = 6 + band * 6, n = 7 + band;
+    for (let i = 0; i < n; i++) {
+      const x = ((i * 53 + band * 17 - T * sp) % (W + 20) + W + 20) % (W + 20) - 10;
+      px(x, y + ((i + band) % 3), 3 + (band >> 1), 1, grand ? '#6aa6c4' : '#7cc3ee');
+    }
+  }
+
+  const nM = S.phase === 'home' ? 1 : marineCount(S.bounty);
+  const target = 64 - Math.min(S.misses, 3) * 12;
+  scene.marineD += (target - scene.marineD) * Math.min(1, dt * 1.5);
+  const bob = reduce ? 0 : Math.round(Math.sin(T * 2.2));
+  const ships = [{ cx: 128, wy: 114 + bob, P: PLAYER, kind: 'player' }];
+  for (let i = 0; i < nM; i++) {
+    const [dx, dy] = MSLOTS[i];
+    ships.push({ cx: 128 - scene.marineD + dx, wy: 112 + dy + (reduce ? 0 : Math.round(Math.sin(T * 2 + i))), P: MARINE, kind: 'marine' });
+  }
+  ships.sort((a, b) => a.wy - b.wy).forEach(s => { wake(s.cx, s.wy, s.kind === 'player' ? 10 : 6); ship(s.cx, s.wy, s.P, s.kind); });
+  requestAnimationFrame(frame);
+}
+function drawClimb(dt) {
+  S.climbT += dt;
+  const k = S.climbT;
+  for (let y = 0; y < H; y++) px(0, y, W, 1, Math.floor(y + k * 50) % 9 < 2 ? '#7e3329' : '#9c4436');
+  for (let i = 0; i < 18; i++) { const y = ((i * 31 + k * 50) % (H + 20)) - 10; px((i * 47) % W, y, 6, 2, '#6c2b22'); }
+  px(100, 0, 56, H, '#3d8fd6'); px(100, 0, 2, H, '#2a6fb0'); px(154, 0, 2, H, '#2a6fb0');
+  for (let i = 0; i < 26; i++) { const y = ((i * 17 - k * 110) % H + H) % H; px(103 + (i * 7) % 50, y, 1, 6, '#e6f4ff'); }
+  ship(128, 100 + Math.round(Math.sin(k * 8)), PLAYER, 'player');
+  if (k > 2.6) { g.globalAlpha = Math.min(1, (k - 2.6) / 0.8); px(0, 0, W, H, '#ffffff'); g.globalAlpha = 1; }
+  if (k > 3.4) afterClimb();
+}
+
+function drawMug() {
+  const ctx = $('mug').getContext('2d');
+  const p2 = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+  const P = PLAYER, cx = 22, wy = 31;
+  p2(0, 0, 48, 36, '#d8bd84');
+  for (let r = 0; r < 6; r++) p2(cx - 11 + r, wy - 6 + r, 23 - r * 2, 1, r === 0 ? P.deck : r === 2 ? P.stripe : P.hull);
+  p2(cx, wy - 28, 1, 22, P.mast);
+  for (let y = wy - 24; y < wy - 10; y++) p2(cx - 7, y, 14 + Math.round(Math.sin((y - wy + 24) / 14 * Math.PI) * 2), 1, P.sail);
+  p2(cx - 2, wy - 20, 5, 6, P.emb); p2(cx - 3, wy - 19, 7, 4, P.emb);
+  p2(cx + 1, wy - 28, 6, 4, P.flag);
+  p2(cx + 11, wy - 10, 4, 4, P.fig);
+  p2(0, wy, 48, 5, '#b89a5e');
+}
+drawMug();
+
+// keep a voyage across live page updates
+const hot = window.claude && window.claude.hot;
+if (hot && hot.snapshot) hot.snapshot(() => ({ S: { ...S, phase: S.phase === 'climb' ? 'result' : S.phase } }));
+function boot(data) {
+  if (data && data.S) {
+    S = Object.assign(fresh(), data.S);
+    const k = areaIndex(S.points);
+    scene.islands = S.climbed && k < 4 ? [] : [{ k, x: ISLAND_X[k], tx: ISLAND_X[k] }];
+  }
+  render();
+  if (S.phase === 'prompt') startTimer();
+  requestAnimationFrame(t => { last = t; frame(t); });
+}
+hot && hot.ready ? hot.ready(boot) : boot((hot && hot.data) || {});
+})();
+</script>
